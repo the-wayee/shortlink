@@ -1,27 +1,22 @@
 <template>
   <el-dialog v-model="dialogVisible" :title="props.title" width="70%" :before-close="handleClose">
     <template #header>
-      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-        <div style="display: flex">
-          <img v-if="!isGroup" :src="getImgUrl(props.favicon)" width="25" height="25" alt="" />
-          <div style="display: flex; flex-direction: column; margin-left: 5px">
-            <span style="font-size: 25px; line-height: 25px; font-weight: 550">{{
+      <div style="display: flex">
+        <img v-if="!isGroup" :src="getImgUrl(props.favicon)" width="25" height="25" alt="" />
+        <div style="display: flex; flex-direction: column; margin-left: 5px">
+          <span style="font-size: 25px; line-height: 25px; font-weight: 550">{{
               props.title
             }}</span>
-            <span v-if="!isGroup" style="margin-top: 5px; font-size: 15px">{{
+          <span v-if="!isGroup" style="margin-top: 5px; font-size: 15px">{{
               props.originUrl
             }}</span>
-            <span v-if="isGroup" style="margin-top: 5px; font-size: 14px">共{{ props.nums }}条短链接</span>
-          </div>
         </div>
-        <el-icon class="el-dialog__headerbtn" style="cursor: pointer; font-size: 20px;" @click="handleClose">
-          <Close />
-        </el-icon>
       </div>
+      <span v-if="isGroup" style="margin: 5px 0 0 5px">共{{ props.nums }}条短链接</span>
     </template>
     <div style="position: absolute; right: 30px; z-index: 999">
       <el-date-picker v-model="dateValue" :clearable="true" type="daterange" range-separator="To" start-placeholder="开始时间"
-        end-placeholder="结束时间" value-format="YYYY-MM-DD" :shortcuts="shortcuts" :size="size" />
+                      end-placeholder="结束时间" value-format="YYYY-MM-DD" :shortcuts="shortcuts" :size="size" />
     </div>
     <!-- 具体展示内容 -->
     <el-tabs v-model="showPane">
@@ -57,7 +52,7 @@
                 <!-- 表格 -->
                 <div v-show="!isLine" style="padding: 20px">
                   <el-table :data="visitsData" border style="width: 100%; height: 210px; overflow: scroll"
-                    :header-cell-style="{ background: '#eef1f6', color: '#606266' }">
+                            :header-cell-style="{ background: '#eef1f6', color: '#606266' }">
                     <el-table-column prop="date" label="时间" width="160" />
                     <el-table-column prop="pv" label="访问次数" width="160" />
                     <el-table-column prop="uv" label="访问人数" width="160" />
@@ -68,19 +63,20 @@
             </template>
           </TitleContent>
           <!-- 地图 -->
-          <TitleContent class="chart-item" style="width: 800px" title="访问地区" @onMounted="initMap">
+          <TitleContent class="chart-item" style="width: 800px" title="访问地区" @onMounted="initWorldMap">
             <template #titleButton>
-              <el-button @click="isChina = !isChina">{{ isChina ? '切换为世界地图' : '切换为中国地图' }}</el-button>
+              <!-- 移除切换按钮，只显示世界地图 -->
             </template>
             <template #content>
               <div class="list-chart">
-                <div v-show="isChina" class="top10">
-                  <span style="font-size: 14px">TOP 10 省份</span>
+                <!-- TOP 10 州 -->
+                <div class="top10">
+                  <span style="font-size: 14px; font-weight: bold;">TOP 10 州</span>
                   <div>
-                    <span v-if="!chinaMapData ?? chinaMapData?.length === 0"
-                      style="font-size: 14px; color: black; font-weight: 100">所选日期内没有访问数据</span>
+                    <span v-if="!chinaMapData || chinaMapData?.length === 0"
+                          style="font-size: 14px; color: black; font-weight: 100">所选日期内没有访问数据</span>
                   </div>
-                  <div class="top-item" v-for="(item, index) in chinaMapData" :key="item.name">
+                  <div class="top-item" v-for="(item, index) in chinaMapData" :key="'state-' + item.name">
                     <div v-if="index <= 9" class="key-value">
                       <span>{{ index + 1 + '. ' + item.name }}</span>
                       <span>{{ (item.ratio * 100).toFixed(2) }}%</span>
@@ -88,17 +84,8 @@
                     </div>
                   </div>
                 </div>
-                <div v-show="!isChina" class="top10">
-                  <span>TOP 10 国家</span>
-                  <template v-for="(item, index) in worldMapData" :key="item.name">
-                    <div v-if="index <= 9" class="key-value">
-                      <span>{{ item.name }}</span>
-                      <span>{{ item.value }}</span>
-                    </div>
-                  </template>
-                </div>
-                <div v-show="isChina" class="chinaMap"></div>
-                <div v-show="!isChina" class="worldMap"></div>
+                <!-- 世界地图 -->
+                <div class="worldMap"></div>
               </div>
             </template>
           </TitleContent>
@@ -189,8 +176,8 @@
         <!-- 分页器 -->
         <div class="pagination-block">
           <el-pagination v-model:current-page="pageParams.current" v-model:page-size="pageParams.size"
-            :page-sizes="[10, 15, 20, 30]" layout="total, sizes, prev, pager, next, jumper" :total="totalNums"
-            @size-change="handleSizeChange" @current-change="handleCurrentChange" />
+                         :page-sizes="[10, 15, 20, 30]" layout="total, sizes, prev, pager, next, jumper" :total="totalNums"
+                         @size-change="handleSizeChange" @current-change="handleCurrentChange" />
         </div>
       </el-tab-pane>
     </el-tabs>
@@ -199,7 +186,6 @@
 
 <script setup>
 import { ref, watch, reactive } from 'vue'
-import { Close } from '@element-plus/icons-vue'
 import TitleContent from './TitleContent.vue'
 import * as echarts from 'echarts'
 import 'echarts/map/js/china.js'
@@ -435,7 +421,7 @@ watch(
   () => props.info?.localeCnStats,
   () => {
     chinaTotalNum.value = 0
-    chinaMapData.value = props.info?.localeCnStats.map((item) => {
+    chinaMapData.value = props.info?.localeCnStats?.map((item) => {
       let { cnt, locale, ratio } = item
       locale = locale.replace('省', '')
       locale = locale.replace('市', '')
@@ -443,7 +429,6 @@ watch(
       return { name: locale, value: cnt, ratio }
     })
     initChinaMap()
-
   },
   {
     deep: true
@@ -451,11 +436,14 @@ watch(
 )
 // 世界地图中展示的数据
 const worldMapData = ref([])
+// 默认显示世界地图
+const isChina = ref(false)
 // 将请求到的数据转化为世界地图中需要的数据结构
 watch(
   () => props.info?.localeCountryStats,
   () => {
-    worldMapData.value = props.info?.localeCountryStats.map((item) => {
+    if (!props.info?.localeCountryStats) return
+    worldMapData.value = props.info.localeCountryStats.map((item) => {
       let { cnt, locale, ratio } = item
       return { name: locale, value: cnt, ratio }
     })
@@ -465,10 +453,10 @@ watch(
     deep: true
   }
 )
-const isChina = ref(false)
 const initChinaMap = () => {
   // 中国地图
   const chinaMapDom = document.querySelector('.chinaMap')
+  if (!chinaMapDom) return
   // console.log('sdfsdfsdfsdf', chinaMapDom)
   const chinaMap = echarts.init(chinaMapDom)
   const option = {
@@ -731,34 +719,43 @@ let nameMap = {
 const initWorldMap = () => {
   // 世界地图
   const worldMapDom = document.querySelector('.worldMap')
+  if (!worldMapDom) return
   const worldMap = echarts.init(worldMapDom)
+  // 计算最大值
+  const maxValue = worldMapData.value.length > 0 
+    ? Math.max(...worldMapData.value.map(item => item.value || 0)) 
+    : 100
   const option = {
     tooltip: {
-      formatter: '{b0}: {c0}'
+      trigger: 'item',
+      formatter: function (params) {
+        if (params.data && params.data.value !== undefined) {
+          return params.name + ': ' + params.data.value + '次'
+        }
+        return params.name + ': 0次'
+      }
     },
-    nameMap,
     visualMap: {
       min: 0,
-      max: 1000,
+      max: maxValue || 100,
       left: 'left',
       top: 'bottom',
       text: ['高', '低'],
       calculable: false,
       orient: 'horizontal',
       inRange: {
-        // 最小值到最大值的颜色
         color: ['#e0ffff', '#006edd'],
         symbolSize: [30, 100]
       }
     },
     series: {
-      name: '数量',
+      name: '访问量',
       type: 'map',
       map: 'world',
+      roam: true,
+      nameMap: nameMap,
       itemStyle: {
-        // 鼠标移入后的样式
         emphasis: {
-          // 鼠标移入后的颜色
           areaColor: '#78dffc'
         }
       },

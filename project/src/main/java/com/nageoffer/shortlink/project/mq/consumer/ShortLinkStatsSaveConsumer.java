@@ -146,7 +146,7 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
             localeParamMap.put("key", statsLocaleAmapKey);
             localeParamMap.put("ip", statsRecord.getRemoteAddr());
             // String localeResultStr = HttpUtil.get(AMAP_REMOTE_URL, localeParamMap);
-            String localeResultStr = HttpUtil.get("http://ip-api.com/json/" + statsRecord.getRemoteAddr() + "?lang=zh-CN");
+            String localeResultStr = HttpUtil.get("http://ip-api.com/json/" + statsRecord.getRemoteAddr());
             JSONObject localeResultObj = JSON.parseObject(localeResultStr);
             String infoCode = localeResultObj.getString("status");
             String actualProvince = "未知";
