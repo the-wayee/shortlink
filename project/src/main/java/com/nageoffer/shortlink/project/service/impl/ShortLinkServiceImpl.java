@@ -165,7 +165,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         // 删除短链接后，布隆过滤器如何删除？详情查看：https://nageoffer.com/shortlink/question
         shortUriCreateCachePenetrationBloomFilter.add(fullShortUrl);
         return ShortLinkCreateRespDTO.builder()
-                .fullShortUrl("http://" + shortLinkDO.getFullShortUrl())
+                .fullShortUrl(buildFullUrl(shortLinkDO.getFullShortUrl()))
                 .originUrl(requestParam.getOriginUrl())
                 .gid(requestParam.getGid())
                 .build();
@@ -220,7 +220,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             lock.unlock();
         }
         return ShortLinkCreateRespDTO.builder()
-                .fullShortUrl("http://" + fullShortUrl)
+                .fullShortUrl(buildFullUrl(fullShortUrl))
                 .originUrl(requestParam.getOriginUrl())
                 .gid(requestParam.getGid())
                 .build();
@@ -350,7 +350,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         IPage<ShortLinkDO> resultPage = baseMapper.pageLink(requestParam);
         return resultPage.convert(each -> {
             ShortLinkPageRespDTO result = BeanUtil.toBean(each, ShortLinkPageRespDTO.class);
-            result.setDomain("http://" + result.getDomain());
+            result.setDomain(buildFullUrl(result.getDomain()));
             return result;
         });
     }
@@ -571,5 +571,18 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         if (!details.contains(domain)) {
             throw new ClientException("演示环境为避免恶意攻击，请生成以下网站跳转链接：" + gotoDomainWhiteListConfiguration.getNames());
         }
+    }
+
+    /**
+     * 构建完整URL，智能添加协议前缀
+     */
+    private String buildFullUrl(String url) {
+        if (StrUtil.isBlank(url)) {
+            return url;
+        }
+        if (url.startsWith("http://") || url.startsWith("https://")) {
+            return url;
+        }
+        return "http://" + url;
     }
 }

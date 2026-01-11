@@ -145,21 +145,26 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
             Map<String, Object> localeParamMap = new HashMap<>();
             localeParamMap.put("key", statsLocaleAmapKey);
             localeParamMap.put("ip", statsRecord.getRemoteAddr());
-            String localeResultStr = HttpUtil.get(AMAP_REMOTE_URL, localeParamMap);
+            // String localeResultStr = HttpUtil.get(AMAP_REMOTE_URL, localeParamMap);
+            String localeResultStr = HttpUtil.get("http://ip-api.com/json/" + statsRecord.getRemoteAddr() + "?lang=zh-CN");
             JSONObject localeResultObj = JSON.parseObject(localeResultStr);
-            String infoCode = localeResultObj.getString("infocode");
+            String infoCode = localeResultObj.getString("status");
             String actualProvince = "未知";
             String actualCity = "未知";
-            if (StrUtil.isNotBlank(infoCode) && StrUtil.equals(infoCode, "10000")) {
-                String province = localeResultObj.getString("province");
+            String actualCountry = "未知";
+            if (StrUtil.isNotBlank(infoCode) && StrUtil.equals(infoCode, "success")) {
+                String province = localeResultObj.getString("regionName");
+                String city = localeResultObj.getString("city");
+                String country = localeResultObj.getString("country");
+                
                 boolean unknownFlag = StrUtil.equals(province, "[]");
                 LinkLocaleStatsDO linkLocaleStatsDO = LinkLocaleStatsDO.builder()
                         .province(actualProvince = unknownFlag ? actualProvince : province)
-                        .city(actualCity = unknownFlag ? actualCity : localeResultObj.getString("city"))
-                        .adcode(unknownFlag ? "未知" : localeResultObj.getString("adcode"))
+                        .city(actualCity = unknownFlag ? actualCity : city)
+                        .adcode(unknownFlag ? "未知" : localeResultObj.getString("zip"))
                         .cnt(1)
                         .fullShortUrl(fullShortUrl)
-                        .country("中国")
+                        .country(actualCountry = unknownFlag ? actualCountry : country)
                         .date(currentDate)
                         .build();
                 linkLocaleStatsMapper.shortLinkLocaleState(linkLocaleStatsDO);
@@ -199,7 +204,7 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
                     .os(statsRecord.getOs())
                     .network(statsRecord.getNetwork())
                     .device(statsRecord.getDevice())
-                    .locale(StrUtil.join("-", "中国", actualProvince, actualCity))
+                    .locale(StrUtil.join("-", actualCountry, actualProvince, actualCity))
                     .fullShortUrl(fullShortUrl)
                     .build();
             linkAccessLogsMapper.insert(linkAccessLogsDO);

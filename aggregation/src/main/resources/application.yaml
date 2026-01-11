@@ -32,7 +32,7 @@ short-link:
     time-window: 1
     max-access-count: 20
   domain:
-    default: 127.0.0.1:8003
+    default: natatory-facetious-darrel.ngrok-free.dev
   demo-mode:
     enable: false
     blacklist:

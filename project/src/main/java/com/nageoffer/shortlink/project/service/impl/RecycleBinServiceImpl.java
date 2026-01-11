@@ -18,6 +18,7 @@
 package com.nageoffer.shortlink.project.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -67,7 +68,7 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
         IPage<ShortLinkDO> resultPage = baseMapper.pageRecycleBinLink(requestParam);
         return resultPage.convert(each -> {
             ShortLinkPageRespDTO result = BeanUtil.toBean(each, ShortLinkPageRespDTO.class);
-            result.setDomain("http://" + result.getDomain());
+            result.setDomain(buildFullUrl(result.getDomain()));
             return result;
         });
     }
@@ -99,5 +100,18 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
                 .build();
         delShortLinkDO.setDelFlag(1);
         baseMapper.update(delShortLinkDO, updateWrapper);
+    }
+
+    /**
+     * 构建完整URL，智能添加协议前缀
+     */
+    private String buildFullUrl(String url) {
+        if (StrUtil.isBlank(url)) {
+            return url;
+        }
+        if (url.startsWith("http://") || url.startsWith("https://")) {
+            return url;
+        }
+        return "http://" + url;
     }
 }

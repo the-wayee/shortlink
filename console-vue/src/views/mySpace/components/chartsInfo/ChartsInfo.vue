@@ -1,18 +1,23 @@
 <template>
   <el-dialog v-model="dialogVisible" :title="props.title" width="70%" :before-close="handleClose">
     <template #header>
-      <div style="display: flex">
-        <img v-if="!isGroup" :src="getImgUrl(props.favicon)" width="25" height="25" alt="" />
-        <div style="display: flex; flex-direction: column; margin-left: 5px">
-          <span style="font-size: 25px; line-height: 25px; font-weight: 550">{{
-            props.title
-          }}</span>
-          <span v-if="!isGroup" style="margin-top: 5px; font-size: 15px">{{
-            props.originUrl
-          }}</span>
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div style="display: flex">
+          <img v-if="!isGroup" :src="getImgUrl(props.favicon)" width="25" height="25" alt="" />
+          <div style="display: flex; flex-direction: column; margin-left: 5px">
+            <span style="font-size: 25px; line-height: 25px; font-weight: 550">{{
+              props.title
+            }}</span>
+            <span v-if="!isGroup" style="margin-top: 5px; font-size: 15px">{{
+              props.originUrl
+            }}</span>
+            <span v-if="isGroup" style="margin-top: 5px; font-size: 14px">共{{ props.nums }}条短链接</span>
+          </div>
         </div>
+        <el-icon class="el-dialog__headerbtn" style="cursor: pointer; font-size: 20px;" @click="handleClose">
+          <Close />
+        </el-icon>
       </div>
-      <span v-if="isGroup" style="margin: 5px 0 0 5px">共{{ props.nums }}条短链接</span>
     </template>
     <div style="position: absolute; right: 30px; z-index: 999">
       <el-date-picker v-model="dateValue" :clearable="true" type="daterange" range-separator="To" start-placeholder="开始时间"
@@ -65,7 +70,7 @@
           <!-- 地图 -->
           <TitleContent class="chart-item" style="width: 800px" title="访问地区" @onMounted="initMap">
             <template #titleButton>
-              <!-- <el-button @click="isChina = !isChina">切换为世界地图</el-button> -->
+              <el-button @click="isChina = !isChina">{{ isChina ? '切换为世界地图' : '切换为中国地图' }}</el-button>
             </template>
             <template #content>
               <div class="list-chart">
@@ -194,6 +199,7 @@
 
 <script setup>
 import { ref, watch, reactive } from 'vue'
+import { Close } from '@element-plus/icons-vue'
 import TitleContent from './TitleContent.vue'
 import * as echarts from 'echarts'
 import 'echarts/map/js/china.js'
@@ -437,19 +443,29 @@ watch(
       return { name: locale, value: cnt, ratio }
     })
     initChinaMap()
+
   },
   {
     deep: true
   }
 )
 // 世界地图中展示的数据
-const worldMapData = ref([
+const worldMapData = ref([])
+// 将请求到的数据转化为世界地图中需要的数据结构
+watch(
+  () => props.info?.localeCountryStats,
+  () => {
+    worldMapData.value = props.info?.localeCountryStats.map((item) => {
+      let { cnt, locale, ratio } = item
+      return { name: locale, value: cnt, ratio }
+    })
+    initWorldMap()
+  },
   {
-    name: '中国',
-    value: 28397.812
+    deep: true
   }
-])
-const isChina = ref(true)
+)
+const isChina = ref(false)
 const initChinaMap = () => {
   // 中国地图
   const chinaMapDom = document.querySelector('.chinaMap')

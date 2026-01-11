@@ -134,6 +134,22 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
                     .build();
             localeCnStats.add(localeCNRespDTO);
         });
+        // 地区访问详情（全球）
+        List<ShortLinkStatsLocaleCNRespDTO> localeCountryStats = new ArrayList<>();
+        List<LinkLocaleStatsDO> listedCountryByShortLink = linkLocaleStatsMapper.listCountryByShortLink(requestParam);
+        int localeCountrySum = listedCountryByShortLink.stream()
+                .mapToInt(LinkLocaleStatsDO::getCnt)
+                .sum();
+        listedCountryByShortLink.forEach(each -> {
+            double ratio = (double) each.getCnt() / localeCountrySum;
+            double actualRatio = Math.round(ratio * 100.0) / 100.0;
+            ShortLinkStatsLocaleCNRespDTO localeCNRespDTO = ShortLinkStatsLocaleCNRespDTO.builder()
+                    .cnt(each.getCnt())
+                    .locale(each.getCountry())
+                    .ratio(actualRatio)
+                    .build();
+            localeCountryStats.add(localeCNRespDTO);
+        });
         // 小时访问详情
         List<Integer> hourStats = new ArrayList<>();
         List<LinkAccessStatsDO> listHourStatsByShortLink = linkAccessStatsMapper.listHourStatsByShortLink(requestParam);
@@ -270,6 +286,7 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
                 .uip(pvUvUidStatsByShortLink.getUip())
                 .daily(daily)
                 .localeCnStats(localeCnStats)
+                .localeCountryStats(localeCountryStats)
                 .hourStats(hourStats)
                 .topIpStats(topIpStats)
                 .weekdayStats(weekdayStats)
@@ -330,6 +347,22 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
                     .ratio(actualRatio)
                     .build();
             localeCnStats.add(localeCNRespDTO);
+        });
+        // 地区访问详情（全球）
+        List<ShortLinkStatsLocaleCNRespDTO> localeCountryStats = new ArrayList<>();
+        List<LinkLocaleStatsDO> listedCountryByGroup = linkLocaleStatsMapper.listCountryByGroup(requestParam);
+        int localeCountrySum = listedCountryByGroup.stream()
+                .mapToInt(LinkLocaleStatsDO::getCnt)
+                .sum();
+        listedCountryByGroup.forEach(each -> {
+            double ratio = (double) each.getCnt() / localeCountrySum;
+            double actualRatio = Math.round(ratio * 100.0) / 100.0;
+            ShortLinkStatsLocaleCNRespDTO localeCNRespDTO = ShortLinkStatsLocaleCNRespDTO.builder()
+                    .cnt(each.getCnt())
+                    .locale(each.getCountry())
+                    .ratio(actualRatio)
+                    .build();
+            localeCountryStats.add(localeCNRespDTO);
         });
         // 小时访问详情
         List<Integer> hourStats = new ArrayList<>();
@@ -435,6 +468,7 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
                 .uip(pvUvUidStatsByGroup.getUip())
                 .daily(daily)
                 .localeCnStats(localeCnStats)
+                .localeCountryStats(localeCountryStats)
                 .hourStats(hourStats)
                 .topIpStats(topIpStats)
                 .weekdayStats(weekdayStats)
