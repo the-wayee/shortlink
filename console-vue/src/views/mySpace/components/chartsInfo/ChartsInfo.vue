@@ -445,7 +445,26 @@ watch(
     if (!props.info?.localeCountryStats) return
     worldMapData.value = props.info.localeCountryStats.map((item) => {
       let { cnt, locale, ratio } = item
-      return { name: locale, value: cnt, ratio }
+      // 手动映射常用国家/地区名为中文，以匹配 ECharts nameMap
+      const nameMapPatch = {
+        'United States': '美国',
+        'United Kingdom': '英国',
+        'England': '英国', // 如果后端返回 England
+        'Hong Kong': '香港',
+        'China': '中国',
+        'Canada': '加拿大',
+        'Australia': '澳大利亚',
+        'Germany': '德国',
+        'France': '法国',
+        'Russia': '俄罗斯',
+        'India': '印度',
+        'Japan': '日本',
+        'South Korea': '韩国',
+        'Singapore': '新加坡'
+      }
+      
+      const mappedName = nameMapPatch[locale] || locale
+      return { name: mappedName, value: cnt, ratio }
     })
     initWorldMap()
   },
@@ -667,6 +686,7 @@ let nameMap = {
   Ukraine: '乌克兰',
   Uruguay: '乌拉圭',
   'United States': '美国',
+  'United States of America': '美国',
   Uzbekistan: '乌兹别克斯坦',
   Venezuela: '委内瑞拉',
   Vietnam: '越南',

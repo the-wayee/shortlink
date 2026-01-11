@@ -60,6 +60,11 @@ public class ShortLinkStatsRespDTO {
     private List<ShortLinkStatsLocaleCNRespDTO> localeCnStats;
 
     /**
+     * 地区访问详情（全球）
+     */
+    private List<ShortLinkStatsLocaleCNRespDTO> localeCountryStats;
+
+    /**
      * 小时访问详情
      */
     private List<Integer> hourStats;
